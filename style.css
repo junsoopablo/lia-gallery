@@ -47,8 +47,9 @@ header {
 
 .site-title .star {
   display: inline-block;
-  color: var(--yellow);
+  color: var(--lavender);
   animation: twinkle 2s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(181, 168, 224, 0.5));
 }
 
 @keyframes twinkle {
