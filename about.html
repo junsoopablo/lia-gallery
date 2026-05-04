@@ -59,25 +59,20 @@
       </div>
     </article>
 
-    <section class="comments" aria-label="방명록">
+    <section class="comments" data-page="about" aria-label="방명록">
       <h2 class="comments-title">💬 방명록</h2>
       <p class="comments-hint">리아에게 한마디 남겨주세요!</p>
-      <script src="https://giscus.app/client.js"
-              data-repo="junsoopablo/lia-gallery"
-              data-repo-id="R_kgDOSTjajA"
-              data-category="General"
-              data-category-id="DIC_kwDOSTjajM4C8SMW"
-              data-mapping="pathname"
-              data-strict="0"
-              data-reactions-enabled="1"
-              data-emit-metadata="1"
-              data-input-position="top"
-              data-theme="preferred_color_scheme"
-              data-lang="ko"
-              data-loading="lazy"
-              crossorigin="anonymous"
-              async>
-      </script>
+      <form class="comment-form">
+        <input type="text" name="name" placeholder="이름" maxlength="50" required autocomplete="name" />
+        <textarea name="message" placeholder="메시지를 적어주세요" maxlength="1000" rows="3" required></textarea>
+        <div class="comment-form-foot">
+          <span class="comment-form-status" aria-live="polite"></span>
+          <button type="submit" class="btn btn-primary">남기기</button>
+        </div>
+      </form>
+      <div class="comment-list">
+        <p class="comment-loading">댓글 불러오는 중...</p>
+      </div>
     </section>
   </main>
 
@@ -90,5 +85,6 @@
       document.querySelectorAll('.admin-link').forEach(a => a.hidden = false);
     }
   </script>
+  <script src="comments.js" defer></script>
 </body>
 </html>
