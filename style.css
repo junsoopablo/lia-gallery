@@ -22,6 +22,8 @@ html, body {
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 body {
@@ -43,6 +45,8 @@ header {
   font-weight: 700;
   color: var(--pink);
   letter-spacing: -1px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .site-title .star {
