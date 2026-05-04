@@ -13,12 +13,27 @@
 import http.server
 import json
 import os
+import re
 import socketserver
 import sys
+import urllib.request
+import urllib.error
 
 PORT = 8765
 HERE = os.path.dirname(os.path.abspath(__file__))
 ARTWORKS_PATH = os.path.join(HERE, 'artworks.js')
+SECRETS_PATH = os.path.join(HERE, 'secrets.json')
+
+SUPABASE_URL = 'https://qalprtpedzvnodbzwqih.supabase.co'
+
+# Load secrets if available (for admin-only DELETE endpoint)
+SECRETS = {}
+if os.path.exists(SECRETS_PATH):
+    try:
+        with open(SECRETS_PATH, encoding='utf-8') as f:
+            SECRETS = json.load(f)
+    except Exception as e:
+        print(f'  ⚠️  secrets.json 읽기 실패: {e}')
 
 HEADER = """// === 리아의 작품 목록 ===
 // 편집은 admin.html (편집실) 페이지에서 하세요.
@@ -65,6 +80,48 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_response(500)
             self.end_headers()
             self.wfile.write(str(e).encode('utf-8'))
+
+    def do_DELETE(self):
+        # /api/comment/<id>  — admin-only, requires service key in secrets.json
+        m = re.match(r'^/api/comment/(\d+)$', self.path)
+        if not m:
+            self.send_error(404)
+            return
+        comment_id = m.group(1)
+
+        service_key = SECRETS.get('supabase_service_key', '')
+        if not service_key or service_key.startswith('Supabase'):
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                'error': 'secrets.json에 service_role 키가 설정되지 않았어요.'
+            }, ensure_ascii=False).encode('utf-8'))
+            return
+
+        url = f'{SUPABASE_URL}/rest/v1/comments?id=eq.{comment_id}'
+        req = urllib.request.Request(url, method='DELETE', headers={
+            'apikey': service_key,
+            'Authorization': f'Bearer {service_key}',
+            'Prefer': 'return=minimal'
+        })
+        try:
+            with urllib.request.urlopen(req) as resp:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'ok': True, 'id': comment_id}).encode())
+        except urllib.error.HTTPError as e:
+            body = e.read().decode('utf-8', errors='replace')
+            self.send_response(e.code)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': body}, ensure_ascii=False).encode('utf-8'))
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}, ensure_ascii=False).encode('utf-8'))
 
 
 def main():

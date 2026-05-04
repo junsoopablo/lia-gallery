@@ -528,6 +528,24 @@ main {
   font-size: 0.82rem;
   color: var(--text-soft);
   flex-shrink: 0;
+  margin-left: auto;
+}
+
+.comment-delete {
+  background: transparent;
+  border: none;
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.comment-delete:hover {
+  background: #ffeaea;
+  color: #c44;
 }
 
 .comment-message {

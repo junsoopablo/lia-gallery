@@ -3,3 +3,6 @@
 __pycache__/
 .vscode/
 .idea/
+
+# 절대 GitHub에 올라가면 안 되는 비밀 키
+secrets.json

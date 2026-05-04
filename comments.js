@@ -9,6 +9,7 @@
     apikey: SUPABASE_ANON_KEY,
     Authorization: 'Bearer ' + SUPABASE_ANON_KEY
   };
+  const IS_LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname);
 
   const section = document.querySelector('section.comments[data-page]');
   if (!section) return;
@@ -58,6 +59,17 @@
       head.appendChild(name);
       head.appendChild(time);
 
+      if (IS_LOCAL) {
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'comment-delete';
+        del.title = '댓글 삭제';
+        del.setAttribute('aria-label', '댓글 삭제');
+        del.textContent = '✕';
+        del.addEventListener('click', () => deleteComment(c.id, card));
+        head.appendChild(del);
+      }
+
       const msg = document.createElement('p');
       msg.className = 'comment-message';
       msg.textContent = c.message;
@@ -66,6 +78,22 @@
       card.appendChild(msg);
       list.appendChild(card);
     });
+  }
+
+  async function deleteComment(id, card) {
+    if (!confirm('이 댓글을 삭제할까요?')) return;
+    card.style.opacity = '0.5';
+    try {
+      const res = await fetch('/api/comment/' + id, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || ('HTTP ' + res.status));
+      }
+      load();
+    } catch (e) {
+      card.style.opacity = '';
+      alert('삭제 실패: ' + e.message);
+    }
   }
 
   async function load() {
