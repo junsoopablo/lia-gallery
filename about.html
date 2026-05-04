@@ -17,6 +17,7 @@
     <nav>
       <a href="index.html">갤러리</a>
       <a href="about.html" class="active">작가 소개</a>
+      <a href="guestbook.html">방명록</a>
       <a href="admin.html" class="admin-link" hidden>✏️ 편집</a>
     </nav>
   </header>
@@ -59,21 +60,6 @@
       </div>
     </article>
 
-    <section class="comments" data-page="about" aria-label="방명록">
-      <h2 class="comments-title">💬 방명록</h2>
-      <p class="comments-hint">리아에게 한마디 남겨주세요!</p>
-      <form class="comment-form">
-        <input type="text" name="name" placeholder="이름" maxlength="50" required autocomplete="name" />
-        <textarea name="message" placeholder="메시지를 적어주세요" maxlength="1000" rows="3" required></textarea>
-        <div class="comment-form-foot">
-          <span class="comment-form-status" aria-live="polite"></span>
-          <button type="submit" class="btn btn-primary">남기기</button>
-        </div>
-      </form>
-      <div class="comment-list">
-        <p class="comment-loading">댓글 불러오는 중...</p>
-      </div>
-    </section>
   </main>
 
   <footer>
@@ -85,6 +71,5 @@
       document.querySelectorAll('.admin-link').forEach(a => a.hidden = false);
     }
   </script>
-  <script src="comments.js" defer></script>
 </body>
 </html>
