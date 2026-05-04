@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>작가 소개 — 리아의 중간정도 크기의 미술관</title>
+  <meta name="description" content="꼬마 작가 리아 소개" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1 class="site-title">리아의 중간정도 크기의 미술관 <span class="star">★</span></h1>
+    <p class="tagline">일곱 살 꼬마 작가 리아의 그림 모음</p>
+    <nav>
+      <a href="index.html">갤러리</a>
+      <a href="about.html" class="active">작가 소개</a>
+      <a href="admin.html" class="admin-link" hidden>✏️ 편집</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="about-hero">
+      <span class="about-emoji" role="img" aria-label="팔레트">🎨</span>
+    </div>
+
+    <article class="about-card">
+      <h2>안녕아새요. 저는 김리아 라고합니다.</h2>
+      <p>궁금하싱거 가 있으시면 자유롭게 얘기해주세요.</p>
+      <p>그림을 자유롭게 보세요.</p>
+      <p>관람해주시면 감사하겠습니다.</p>
+      <p>잘 보시면 좋겠습니다.</p>
+      <p>다보시면요 감사하겠습니다.</p>
+      <p>끝까지 봐주세요. 💗</p>
+
+      <div class="about-facts">
+        <div class="fact">
+          <span class="fact-emoji">🎂</span>
+          <div class="fact-label">나이</div>
+          <div class="fact-value">7살</div>
+        </div>
+        <div class="fact">
+          <span class="fact-emoji">🎒</span>
+          <div class="fact-label">올해 9월</div>
+          <div class="fact-value">초등학교 입학</div>
+        </div>
+        <div class="fact">
+          <span class="fact-emoji">✏️</span>
+          <div class="fact-label">좋아하는 것</div>
+          <div class="fact-value">그림 그리기</div>
+        </div>
+        <div class="fact">
+          <span class="fact-emoji">🌈</span>
+          <div class="fact-label">자주 쓰는 색</div>
+          <div class="fact-value">알록달록</div>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <p>made with <span class="heart">♥</span> for 리아</p>
+  </footer>
+
+  <script>
+    if (['localhost', '127.0.0.1'].includes(location.hostname)) {
+      document.querySelectorAll('.admin-link').forEach(a => a.hidden = false);
+    }
+  </script>
+</body>
+</html>
