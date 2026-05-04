@@ -236,6 +236,7 @@ main {
   color: var(--text-soft);
   margin-top: 8px;
   line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 /* === Lightbox === */
@@ -260,10 +261,12 @@ main {
   border-radius: 22px;
   max-width: 92vw;
   max-height: 92vh;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  -webkit-overflow-scrolling: touch;
 }
 
 .lightbox-content img {
@@ -773,7 +776,8 @@ footer .heart { color: var(--pink); }
   .artwork-info { padding: 10px 12px 14px; }
   .artwork-title { font-size: 1.15rem; line-height: 1.25; }
   .artwork-meta { font-size: 0.74rem; }
-  .artwork-desc {
+  /* 갤러리 카드의 설명만 2줄 자르기 (라이트박스에서는 전체 표시) */
+  .artwork-card .artwork-desc {
     font-size: 0.82rem;
     margin-top: 6px;
     display: -webkit-box;
