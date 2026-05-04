@@ -387,6 +387,33 @@ main {
 .fact-label { font-size: 0.85rem; color: var(--text-soft); }
 .fact-value { font-family: 'Gaegu', cursive; font-size: 1.4rem; color: var(--text); }
 
+/* === Comments (giscus) === */
+.comments {
+  max-width: 820px;
+  margin: 56px auto 0;
+  background: white;
+  border-radius: 22px;
+  padding: 28px 28px 20px;
+  box-shadow: var(--shadow);
+}
+
+.comments-title {
+  font-family: 'Gaegu', cursive;
+  font-size: 1.8rem;
+  color: var(--pink);
+  margin-bottom: 4px;
+}
+
+.comments-hint {
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 600px) {
+  .comments { padding: 22px 18px 16px; border-radius: 18px; }
+}
+
 /* === Footer === */
 footer {
   text-align: center;
