@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>작품 올리기 — 리아의 중간정도 크기의 미술관</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1 class="site-title">작품 올리기 ✨</h1>
+    <p class="tagline" id="welcome">사진 찍고 올리면 갤러리에 바로 보여요</p>
+    <nav>
+      <a href="index.html">갤러리</a>
+      <a href="upload.html" class="active">올리기</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- 로그인 화면 -->
+    <section id="loginSection" class="upload-card" style="display:none">
+      <h2 class="upload-section-title">🔒 로그인</h2>
+      <form id="loginForm" class="upload-form">
+        <label>
+          <span>아이디</span>
+          <input type="text" id="loginId" autocomplete="username" required value="liakim" />
+        </label>
+        <label>
+          <span>비밀번호</span>
+          <input type="password" id="loginPw" autocomplete="current-password" required />
+        </label>
+        <div class="upload-foot">
+          <span class="upload-status" id="loginStatus" aria-live="polite"></span>
+          <button type="submit" class="btn btn-primary">로그인</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 업로드 화면 -->
+    <section id="uploadSection" class="upload-card" style="display:none">
+      <div class="upload-head">
+        <h2 class="upload-section-title">🎨 새 작품</h2>
+        <button id="logoutBtn" class="btn btn-link" type="button">로그아웃</button>
+      </div>
+
+      <form id="uploadForm" class="upload-form">
+        <label class="photo-picker">
+          <input type="file" id="photo" accept="image/*" capture="environment" required />
+          <div class="photo-picker-empty" id="photoPlaceholder">
+            <span class="photo-picker-icon">📷</span>
+            <span class="photo-picker-text">사진 선택 / 카메라로 찍기</span>
+          </div>
+          <img id="photoPreview" alt="" style="display:none" />
+        </label>
+
+        <label>
+          <span>제목</span>
+          <input type="text" id="title" placeholder="예: 무지개 고양이" maxlength="100" />
+        </label>
+
+        <label>
+          <span>주제</span>
+          <select id="category">
+            <option value="">선택 안 함 (기타)</option>
+            <option value="가족">가족</option>
+            <option value="자연">자연</option>
+            <option value="동시">동시</option>
+            <option value="일상">일상</option>
+          </select>
+        </label>
+
+        <label>
+          <span>설명</span>
+          <textarea id="description" rows="3" placeholder="작품에 대해 자유롭게 적어주세요" maxlength="2000"></textarea>
+        </label>
+
+        <label>
+          <span>날짜</span>
+          <input type="text" id="date" placeholder="2026년 5월" />
+        </label>
+
+        <div class="upload-foot">
+          <span class="upload-status" id="uploadStatus" aria-live="polite"></span>
+          <button type="submit" class="btn btn-primary" id="submitBtn">올리기</button>
+        </div>
+      </form>
+    </section>
+
+    <p id="loadingMsg" class="upload-loading">로딩 중…</p>
+  </main>
+
+  <footer>
+    <p>made with <span class="heart">♥</span> for 리아</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script>
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        storage: window.localStorage,
+      }
+    });
+
+    const loginSection = document.getElementById('loginSection');
+    const uploadSection = document.getElementById('uploadSection');
+    const loadingMsg = document.getElementById('loadingMsg');
+
+    function show(el) { el.style.display = ''; }
+    function hide(el) { el.style.display = 'none'; }
+
+    // 아이디 → 가짜 이메일 변환 (Supabase Auth는 이메일 기반)
+    function idToEmail(id) {
+      return id.trim() + '@junsoopablo.local';
+    }
+
+    // === 자동 로그인 상태 확인 ===
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      hide(loadingMsg);
+      if (session) {
+        showUploadUI(session.user);
+      } else {
+        show(loginSection);
+      }
+    })();
+
+    function showUploadUI(user) {
+      hide(loginSection);
+      show(uploadSection);
+      const id = (user.email || '').split('@')[0];
+      document.getElementById('welcome').textContent = `${id}, 환영합니다! 사진 찍고 올리면 갤러리에 바로 보여요`;
+      // 날짜 기본값
+      const now = new Date();
+      document.getElementById('date').value = `${now.getFullYear()}년 ${now.getMonth() + 1}월`;
+    }
+
+    // === 로그인 처리 ===
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('loginId').value;
+      const pw = document.getElementById('loginPw').value;
+      const status = document.getElementById('loginStatus');
+      status.textContent = '로그인 중...';
+      status.className = 'upload-status';
+      const { data, error } = await sb.auth.signInWithPassword({
+        email: idToEmail(id),
+        password: pw,
+      });
+      if (error) {
+        status.textContent = '✗ ' + (error.message === 'Invalid login credentials' ? '아이디나 비밀번호가 틀렸어요' : error.message);
+        status.className = 'upload-status error';
+        return;
+      }
+      status.textContent = '✓ 로그인됨';
+      status.className = 'upload-status success';
+      showUploadUI(data.user);
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await sb.auth.signOut();
+      location.reload();
+    });
+
+    // === 사진 미리보기 ===
+    const photoInput = document.getElementById('photo');
+    const photoPreview = document.getElementById('photoPreview');
+    const photoPlaceholder = document.getElementById('photoPlaceholder');
+    photoInput.addEventListener('change', () => {
+      const file = photoInput.files[0];
+      if (!file) return;
+      photoPreview.src = URL.createObjectURL(file);
+      photoPreview.style.display = '';
+      photoPlaceholder.style.display = 'none';
+    });
+
+    // === 이미지 리사이즈 (긴 변 최대 1600px, JPEG) ===
+    async function resizeImage(file, maxDim = 1600, quality = 0.85) {
+      const img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = URL.createObjectURL(file);
+      });
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if (Math.max(w, h) > maxDim) {
+        const scale = maxDim / Math.max(w, h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      return new Promise(resolve =>
+        canvas.toBlob(resolve, 'image/jpeg', quality)
+      );
+    }
+
+    // === 업로드 처리 ===
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('uploadStatus');
+      const submitBtn = document.getElementById('submitBtn');
+      const file = photoInput.files[0];
+      if (!file) {
+        status.textContent = '사진을 선택해주세요';
+        status.className = 'upload-status error';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      try {
+        // 1) 리사이즈
+        status.textContent = '사진 줄이는 중…';
+        status.className = 'upload-status';
+        const blob = await resizeImage(file);
+
+        // 2) Storage 업로드
+        const filename = 'lia_' + Date.now() + '.jpg';
+        status.textContent = '업로드 중…';
+        const { error: upErr } = await sb.storage
+          .from('artworks')
+          .upload(filename, blob, {
+            contentType: 'image/jpeg',
+            upsert: false,
+          });
+        if (upErr) throw new Error('업로드 실패: ' + upErr.message);
+
+        // 3) 다음 sort_order 계산
+        const { data: maxRows } = await sb
+          .from('artworks')
+          .select('sort_order')
+          .order('sort_order', { ascending: false, nullsFirst: false })
+          .limit(1);
+        const nextSort = (maxRows && maxRows[0] ? maxRows[0].sort_order : 0) + 1;
+
+        // 4) DB insert
+        status.textContent = '저장 중…';
+        const { error: insErr } = await sb.from('artworks').insert({
+          title: document.getElementById('title').value.trim(),
+          date: document.getElementById('date').value.trim(),
+          category: document.getElementById('category').value,
+          description: document.getElementById('description').value.trim(),
+          image_path: filename,
+          sort_order: nextSort,
+        });
+        if (insErr) throw new Error('DB 저장 실패: ' + insErr.message);
+
+        // 성공
+        status.textContent = '✓ 올라갔어요! 갤러리에서 확인해보세요';
+        status.className = 'upload-status success';
+        document.getElementById('uploadForm').reset();
+        photoPreview.style.display = 'none';
+        photoPlaceholder.style.display = '';
+        const now = new Date();
+        document.getElementById('date').value = `${now.getFullYear()}년 ${now.getMonth() + 1}월`;
+      } catch (err) {
+        status.textContent = '✗ ' + err.message;
+        status.className = 'upload-status error';
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -583,6 +583,157 @@ main {
   word-break: break-word;
 }
 
+/* === Upload page === */
+.upload-card {
+  max-width: 720px;
+  margin: 24px auto 0;
+  background: white;
+  border-radius: 22px;
+  padding: 28px;
+  box-shadow: var(--shadow);
+}
+
+.upload-loading {
+  text-align: center;
+  color: var(--text-soft);
+  margin-top: 60px;
+}
+
+.upload-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.upload-section-title {
+  font-family: 'Gaegu', cursive;
+  font-size: 1.8rem;
+  color: var(--pink);
+  margin: 0;
+}
+
+.upload-form {
+  display: grid;
+  gap: 14px;
+}
+
+.upload-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.upload-form label > span {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  font-weight: 500;
+}
+
+.upload-form input[type=text],
+.upload-form input[type=password],
+.upload-form select,
+.upload-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--text);
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--cream-deep);
+  background: var(--cream);
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.upload-form input:focus,
+.upload-form select:focus,
+.upload-form textarea:focus {
+  outline: none;
+  border-color: var(--pink);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(255, 158, 181, 0.2);
+}
+
+/* 사진 선택 영역 */
+.photo-picker {
+  position: relative;
+  border: 2px dashed var(--pink-soft);
+  border-radius: 18px;
+  background: var(--cream);
+  cursor: pointer;
+  overflow: hidden;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-picker input[type=file] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.photo-picker-empty {
+  text-align: center;
+  padding: 32px;
+}
+
+.photo-picker-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.photo-picker-text {
+  color: var(--text-soft);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.photo-picker img {
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  background: var(--cream-deep);
+}
+
+.upload-foot {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.upload-status {
+  margin-right: auto;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+.upload-status.success { color: #2f7d52; font-weight: 500; }
+.upload-status.error { color: #c44; font-weight: 500; }
+
+.btn-link {
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  padding: 6px 12px;
+}
+.btn-link:hover { color: var(--text); background: var(--cream-deep); box-shadow: none; transform: none; }
+
+@media (max-width: 600px) {
+  .upload-card { padding: 22px 16px; border-radius: 18px; }
+  .upload-section-title { font-size: 1.5rem; }
+  .upload-foot { flex-direction: column-reverse; align-items: stretch; gap: 8px; }
+  .upload-foot .upload-status { margin-right: 0; text-align: center; }
+  .upload-foot .btn-primary { width: 100%; padding: 13px 20px; }
+}
+
 /* === Footer === */
 footer {
   text-align: center;
