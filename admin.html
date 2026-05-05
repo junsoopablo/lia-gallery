@@ -121,9 +121,18 @@
         });
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
-        status.textContent = `✓ 저장됨 (${data.count}개 작품)`;
-        status.className = 'admin-status saved';
-        setTimeout(() => { status.textContent = ''; }, 4000);
+        const gh = data.github || {};
+        let msg = `✓ 저장됨 (${data.count}개 작품)`;
+        if (gh.status === 'pushed') {
+          msg += ' · 🚀 GitHub 배포 완료';
+        } else if (gh.status === 'no-changes') {
+          msg += ' (변경 없음)';
+        } else if (gh.status === 'error') {
+          msg += ' · ⚠️ GitHub 푸시 실패: ' + gh.message;
+        }
+        status.textContent = msg;
+        status.className = gh.status === 'error' ? 'admin-status failed' : 'admin-status saved';
+        setTimeout(() => { status.textContent = ''; status.className = 'admin-status'; }, 6000);
       } catch (e) {
         status.textContent = '✗ 저장 실패: ' + e.message;
         status.className = 'admin-status failed';

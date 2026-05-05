@@ -11,6 +11,27 @@
 
 const artworks = [
   {
+    "src": "images/IMG_7467.jpg",
+    "title": "레몬",
+    "date": "2026년 5월",
+    "category": "일상",
+    "description": "내가 레몬을 따라 수채화로 그렸다"
+  },
+  {
+    "src": "images/IMG_7466.jpg",
+    "title": "수채화",
+    "date": "2026년 5월",
+    "category": "일상",
+    "description": "내가 따라 그렸다. 우리 집 앞에 있는 도서관에서"
+  },
+  {
+    "src": "images/IMG_7465.jpg",
+    "title": "유태인 빵",
+    "date": "2026년 5월",
+    "category": "일상",
+    "description": "내가 수채화로 그렸다"
+  },
+  {
     "src": "images/IMG_7437.jpg",
     "title": "TV",
     "date": "2026년 5월",

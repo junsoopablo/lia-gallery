@@ -15,6 +15,7 @@ import json
 import os
 import re
 import socketserver
+import subprocess
 import sys
 import urllib.request
 import urllib.error
@@ -34,6 +35,45 @@ if os.path.exists(SECRETS_PATH):
             SECRETS = json.load(f)
     except Exception as e:
         print(f'  ⚠️  secrets.json 읽기 실패: {e}')
+
+def git(*args, timeout=30):
+    """리포 디렉토리에서 git 명령 실행. CompletedProcess 반환."""
+    return subprocess.run(
+        ['git', '-C', HERE, *args],
+        capture_output=True, text=True, timeout=timeout
+    )
+
+
+def git_auto_push():
+    """artworks.js 및 새 이미지 변경을 자동 커밋 + 푸시.
+
+    반환: {'status': 'pushed' | 'no-changes' | 'error', 'message': str}
+    """
+    try:
+        # 변경된 파일 스테이징 (artworks.js + 새 이미지)
+        git('add', 'artworks.js', 'images/')
+
+        # 스테이징된 변경 있는지 확인
+        diff = git('diff', '--cached', '--quiet')
+        if diff.returncode == 0:
+            return {'status': 'no-changes', 'message': '변경 없음'}
+
+        commit = git('commit', '-m', '작품 정보 업데이트 (편집실에서 자동 배포)')
+        if commit.returncode != 0:
+            return {'status': 'error', 'message': 'commit 실패: ' + commit.stderr.strip()}
+
+        push = git('push', timeout=60)
+        if push.returncode != 0:
+            return {'status': 'error', 'message': 'push 실패: ' + push.stderr.strip()}
+
+        return {'status': 'pushed', 'message': 'GitHub에 올렸어요'}
+    except subprocess.TimeoutExpired:
+        return {'status': 'error', 'message': '시간 초과 (인터넷 확인)'}
+    except FileNotFoundError:
+        return {'status': 'error', 'message': 'git을 찾을 수 없어요'}
+    except Exception as e:
+        return {'status': 'error', 'message': str(e)}
+
 
 HEADER = """// === 리아의 작품 목록 ===
 // 편집은 admin.html (편집실) 페이지에서 하세요.
@@ -72,10 +112,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             with open(ARTWORKS_PATH, 'w', encoding='utf-8') as f:
                 f.write(content)
 
+            # GitHub에 자동 푸시
+            push_result = git_auto_push()
+
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({'ok': True, 'count': len(artworks)}).encode())
+            self.wfile.write(json.dumps({
+                'ok': True,
+                'count': len(artworks),
+                'github': push_result,
+            }, ensure_ascii=False).encode('utf-8'))
         except Exception as e:
             self.send_response(500)
             self.end_headers()
