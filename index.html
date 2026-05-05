@@ -35,6 +35,7 @@
       <a href="about.html">작가 소개</a>
       <a href="guestbook.html">방명록</a>
       <a href="upload.html">올리기</a>
+      <a href="#" class="admin-only" id="logoutLink">로그아웃</a>
       <a href="admin.html" class="admin-link" hidden>✏️ 편집</a>
     </nav>
   </header>
@@ -56,6 +57,7 @@
         <h2 class="artwork-title" id="lightboxTitle"></h2>
         <p class="artwork-meta" id="lightboxMeta"></p>
         <p class="artwork-desc" id="lightboxDesc"></p>
+        <button class="lightbox-delete admin-only" id="lightboxDelete" type="button">🗑️ 삭제</button>
       </div>
     </div>
   </div>
@@ -64,7 +66,9 @@
     <p>made with <span class="heart">♥</span> for 리아</p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
+  <script src="auth.js"></script>
   <script>
     // === Show 편집 link only on localhost ===
     if (['localhost', '127.0.0.1'].includes(location.hostname)) {
@@ -236,6 +240,26 @@
     document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
     document.getElementById('lightboxPrev').addEventListener('click', e => { e.stopPropagation(); nav(-1); });
     document.getElementById('lightboxNext').addEventListener('click', e => { e.stopPropagation(); nav(1); });
+
+    document.getElementById('lightboxDelete').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const art = artworks[currentIdx];
+      if (!art) return;
+      const label = art.title || '이 작품';
+      if (!confirm(`"${label}"을(를) 정말 삭제할까요?\n되돌릴 수 없어요.`)) return;
+
+      const filename = (art.src || '').split('/').pop();
+      try {
+        const { error: rowErr } = await sb.from('artworks').delete().eq('id', art.id);
+        if (rowErr) throw rowErr;
+        // 이미지 파일도 삭제 (실패해도 행은 이미 지워짐)
+        if (filename) await sb.storage.from('artworks').remove([filename]);
+        closeLightbox();
+        await loadArtworks();
+      } catch (err) {
+        alert('삭제 실패: ' + (err.message || err));
+      }
+    });
     lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
     document.addEventListener('keydown', e => {
       if (!lightbox.classList.contains('open')) return;

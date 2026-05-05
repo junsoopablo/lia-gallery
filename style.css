@@ -283,6 +283,32 @@ main {
 
 .lightbox-info .artwork-title { font-size: 1.8rem; }
 
+/* 로그인 한 사용자만 보이는 요소 */
+.admin-only { display: none; }
+body.is-admin .admin-only { display: inline-flex; }
+
+.lightbox-delete {
+  margin-top: 14px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #fff0f0;
+  color: #c44;
+  border: 2px solid #ffd6d6;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 9px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.lightbox-delete:hover {
+  background: #ffe0e0;
+  transform: translateY(-1px);
+}
+
 .lightbox-close {
   position: absolute;
   top: 20px;
