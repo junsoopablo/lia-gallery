@@ -326,36 +326,55 @@
       });
     }
 
+    const NAME_KEY = 'lia-gallery-display-name';
+
     async function ensureUser() {
       const { data: { session } } = await sb.auth.getSession();
       if (session) { currentUser = session.user; return session.user; }
 
       const name = await promptForName();
       if (!name) return null;
+
+      // 이름을 localStorage에 즉시 저장 (updateUser 실패해도 fallback)
+      localStorage.setItem(NAME_KEY, name);
+
       const { data: signupData, error: signupErr } = await sb.auth.signInAnonymously();
-      if (signupErr) { alert('인증 실패: ' + signupErr.message); return null; }
-      const { data: updData } = await sb.auth.updateUser({ data: { display_name: name } });
-      const user = (updData && updData.user) || signupData.user;
-      currentUser = user;
-      return user;
+      if (signupErr) {
+        console.error('signInAnonymously error:', signupErr);
+        alert('인증 실패: ' + signupErr.message);
+        return null;
+      }
+      currentUser = signupData.user;
+
+      // user_metadata 업데이트는 best-effort (실패해도 좋아요는 진행)
+      sb.auth.updateUser({ data: { display_name: name } })
+        .then(({ error }) => { if (error) console.warn('updateUser error:', error); })
+        .catch(e => console.warn('updateUser exception:', e));
+
+      return signupData.user;
     }
 
     function displayNameOf(user) {
-      const meta = user.user_metadata && user.user_metadata.display_name;
+      const meta = user && user.user_metadata && user.user_metadata.display_name;
       if (meta) return meta;
-      if (user.email === 'liakim@junsoopablo.local') return '리아';
-      if (user.email) return user.email.split('@')[0];
+      const stored = localStorage.getItem(NAME_KEY);
+      if (stored) return stored;
+      if (user && user.email === 'liakim@junsoopablo.local') return '리아';
+      if (user && user.email) return user.email.split('@')[0];
       return '익명';
     }
 
     // === Like toggle ===
     document.getElementById('lightboxLikeBtn').addEventListener('click', async (e) => {
       e.stopPropagation();
+      e.preventDefault();
       const art = artworks[currentIdx];
-      if (!art) return;
+      if (!art) { console.warn('no current artwork'); return; }
+      console.log('[like] click on', art.title, 'id=', art.id);
 
       const user = await ensureUser();
-      if (!user) return;
+      if (!user) { console.log('[like] no user'); return; }
+      console.log('[like] user id=', user.id, 'is_anonymous=', user.is_anonymous);
 
       const myLike = (art.likes || []).find(l => l.user_id === user.id);
       if (myLike) {
@@ -365,22 +384,30 @@
         const { error } = await sb.from('likes').delete()
           .eq('artwork_id', art.id).eq('user_id', user.id);
         if (error) {
+          console.error('[like] delete error:', error);
           art.likes.push(myLike);
           updateLightboxLikes(art); refreshCardLikes(art);
-          alert('실패: ' + error.message);
+          alert('좋아요 취소 실패: ' + error.message);
+        } else {
+          console.log('[like] removed');
         }
       } else {
         // 추가 (optimistic)
-        const newLike = { user_id: user.id, display_name: displayNameOf(user) };
+        const name = displayNameOf(user);
+        const newLike = { user_id: user.id, display_name: name };
         art.likes = [...(art.likes || []), newLike];
         updateLightboxLikes(art); refreshCardLikes(art);
-        const { error } = await sb.from('likes').insert({
-          artwork_id: art.id, user_id: user.id, display_name: newLike.display_name,
-        });
+        console.log('[like] inserting:', { artwork_id: art.id, user_id: user.id, display_name: name });
+        const { data, error } = await sb.from('likes').insert({
+          artwork_id: art.id, user_id: user.id, display_name: name,
+        }).select();
         if (error) {
+          console.error('[like] insert error:', error);
           art.likes = art.likes.filter(l => l !== newLike);
           updateLightboxLikes(art); refreshCardLikes(art);
-          alert('실패: ' + error.message);
+          alert('좋아요 실패: ' + error.message + '\n(자세한 내용은 콘솔 확인)');
+        } else {
+          console.log('[like] inserted:', data);
         }
       }
     });
