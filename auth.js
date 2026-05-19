@@ -1,5 +1,5 @@
 // 공통 인증 처리: 모든 페이지에서 로그인 상태 감지 + 로그아웃 핸들러.
-// 사용: <script src="https://cdn.../@supabase/supabase-js@2.39.0/.../supabase.min.js">
+// 사용: <script src="https://cdn.../@supabase/supabase-js@2.45.0/.../supabase.min.js">
 //      <script src="config.js">
 //      <script src="auth.js">
 (function () {
