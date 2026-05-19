@@ -57,7 +57,28 @@
         <h2 class="artwork-title" id="lightboxTitle"></h2>
         <p class="artwork-meta" id="lightboxMeta"></p>
         <p class="artwork-desc" id="lightboxDesc"></p>
+        <div class="lightbox-likes">
+          <button class="lightbox-like-btn" id="lightboxLikeBtn" type="button">
+            <span class="like-icon">🤍</span>
+            <span class="like-count">0</span>
+            <span class="like-label">좋아요</span>
+          </button>
+          <div class="lightbox-likers" id="lightboxLikers"></div>
+        </div>
         <button class="lightbox-delete admin-only" id="lightboxDelete" type="button">🗑️ 삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Name modal (likes 처음 누를 때) -->
+  <div class="name-modal" id="nameModal" hidden role="dialog" aria-modal="true" aria-label="이름 입력">
+    <div class="name-modal-content">
+      <h3>이름을 알려주세요</h3>
+      <p>좋아요 누르려면 이름이 필요해요. 한 번만 적으면 돼요.</p>
+      <input type="text" id="nameModalInput" maxlength="50" placeholder="예: 김ㅇㅇ" />
+      <div class="name-modal-buttons">
+        <button type="button" id="nameModalCancel" class="btn btn-ghost">취소</button>
+        <button type="button" id="nameModalOk" class="btn btn-primary">확인</button>
       </div>
     </div>
   </div>
@@ -82,13 +103,24 @@
     }
 
     let artworks = [];
+    let currentUser = null;
     const gallery = document.getElementById('gallery');
     const filterBar = document.getElementById('filterBar');
 
-    // === Load artworks from Supabase ===
+    // 현재 사용자 상태 추적
+    sb.auth.getSession().then(({ data: { session } }) => { currentUser = session?.user || null; });
+    sb.auth.onAuthStateChange((_e, session) => {
+      currentUser = session?.user || null;
+      // 라이트박스가 열려있으면 좋아요 상태 갱신
+      if (lightbox.classList.contains('open') && artworks[currentIdx]) {
+        updateLightboxLikes(artworks[currentIdx]);
+      }
+    });
+
+    // === Load artworks (with likes) ===
     async function loadArtworks() {
       gallery.innerHTML = '<div class="empty">작품 불러오는 중...</div>';
-      const url = `${SUPABASE_URL}/rest/v1/artworks?select=*&order=sort_order.desc.nullslast,created_at.desc`;
+      const url = `${SUPABASE_URL}/rest/v1/artworks?select=*,likes(user_id,display_name)&order=sort_order.desc.nullslast,created_at.desc`;
       try {
         const res = await fetch(url, {
           headers: {
@@ -105,6 +137,7 @@
           category: r.category || '',
           description: r.description || '',
           src: imageUrl(r.image_path),
+          likes: r.likes || [],
         }));
         renderGallery();
       } catch (e) {
@@ -126,6 +159,7 @@
         const card = document.createElement('article');
         card.className = 'artwork-card';
         card.dataset.idx = idx;
+        card.dataset.id = art.id;
         card.dataset.category = getCat(art);
 
         const wrap = document.createElement('div');
@@ -143,7 +177,15 @@
         h3.textContent = art.title;
         const meta = document.createElement('p');
         meta.className = 'artwork-meta';
-        meta.textContent = art.date || '';
+        const dateText = document.createElement('span');
+        dateText.textContent = art.date || '';
+        meta.appendChild(dateText);
+        if (art.likes && art.likes.length > 0) {
+          const pill = document.createElement('span');
+          pill.className = 'card-like-pill';
+          pill.textContent = ` · ❤️ ${art.likes.length}`;
+          meta.appendChild(pill);
+        }
         info.appendChild(h3);
         info.appendChild(meta);
         if (art.description) {
@@ -218,9 +260,130 @@
       lbTitle.textContent = art.title;
       lbMeta.textContent = art.date || '';
       lbDesc.textContent = art.description || '';
+      updateLightboxLikes(art);
       lightbox.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
+
+    function updateLightboxLikes(art) {
+      const btn = document.getElementById('lightboxLikeBtn');
+      const icon = btn.querySelector('.like-icon');
+      const countEl = btn.querySelector('.like-count');
+      const likers = document.getElementById('lightboxLikers');
+      const likes = art.likes || [];
+      const liked = currentUser && likes.some(l => l.user_id === currentUser.id);
+      icon.textContent = liked ? '❤️' : '🤍';
+      btn.classList.toggle('liked', !!liked);
+      countEl.textContent = likes.length;
+      likers.textContent = likes.length ? likes.map(l => l.display_name).join(', ') : '';
+    }
+
+    function refreshCardLikes(art) {
+      const card = document.querySelector(`.artwork-card[data-id="${art.id}"]`);
+      if (!card) return;
+      const meta = card.querySelector('.artwork-meta');
+      if (!meta) return;
+      // Re-render meta line
+      meta.innerHTML = '';
+      const dateText = document.createElement('span');
+      dateText.textContent = art.date || '';
+      meta.appendChild(dateText);
+      if (art.likes && art.likes.length > 0) {
+        const pill = document.createElement('span');
+        pill.className = 'card-like-pill';
+        pill.textContent = ` · ❤️ ${art.likes.length}`;
+        meta.appendChild(pill);
+      }
+    }
+
+    // === Name modal ===
+    function promptForName() {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('nameModal');
+        const input = document.getElementById('nameModalInput');
+        const ok = document.getElementById('nameModalOk');
+        const cancel = document.getElementById('nameModalCancel');
+
+        function close(name) {
+          modal.hidden = true;
+          input.value = '';
+          ok.onclick = cancel.onclick = input.onkeydown = null;
+          resolve(name);
+        }
+        ok.onclick = () => {
+          const name = input.value.trim();
+          if (!name) { input.focus(); return; }
+          close(name);
+        };
+        cancel.onclick = () => close(null);
+        input.onkeydown = (e) => {
+          if (e.key === 'Enter') ok.onclick();
+          else if (e.key === 'Escape') cancel.onclick();
+        };
+
+        modal.hidden = false;
+        setTimeout(() => input.focus(), 50);
+      });
+    }
+
+    async function ensureUser() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) { currentUser = session.user; return session.user; }
+
+      const name = await promptForName();
+      if (!name) return null;
+      const { data: signupData, error: signupErr } = await sb.auth.signInAnonymously();
+      if (signupErr) { alert('인증 실패: ' + signupErr.message); return null; }
+      const { data: updData } = await sb.auth.updateUser({ data: { display_name: name } });
+      const user = (updData && updData.user) || signupData.user;
+      currentUser = user;
+      return user;
+    }
+
+    function displayNameOf(user) {
+      const meta = user.user_metadata && user.user_metadata.display_name;
+      if (meta) return meta;
+      if (user.email === 'liakim@junsoopablo.local') return '리아';
+      if (user.email) return user.email.split('@')[0];
+      return '익명';
+    }
+
+    // === Like toggle ===
+    document.getElementById('lightboxLikeBtn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const art = artworks[currentIdx];
+      if (!art) return;
+
+      const user = await ensureUser();
+      if (!user) return;
+
+      const myLike = (art.likes || []).find(l => l.user_id === user.id);
+      if (myLike) {
+        // 취소 (optimistic)
+        art.likes = art.likes.filter(l => l !== myLike);
+        updateLightboxLikes(art); refreshCardLikes(art);
+        const { error } = await sb.from('likes').delete()
+          .eq('artwork_id', art.id).eq('user_id', user.id);
+        if (error) {
+          art.likes.push(myLike);
+          updateLightboxLikes(art); refreshCardLikes(art);
+          alert('실패: ' + error.message);
+        }
+      } else {
+        // 추가 (optimistic)
+        const newLike = { user_id: user.id, display_name: displayNameOf(user) };
+        art.likes = [...(art.likes || []), newLike];
+        updateLightboxLikes(art); refreshCardLikes(art);
+        const { error } = await sb.from('likes').insert({
+          artwork_id: art.id, user_id: user.id, display_name: newLike.display_name,
+        });
+        if (error) {
+          art.likes = art.likes.filter(l => l !== newLike);
+          updateLightboxLikes(art); refreshCardLikes(art);
+          alert('실패: ' + error.message);
+        }
+      }
+    });
 
     function closeLightbox() {
       lightbox.classList.remove('open');

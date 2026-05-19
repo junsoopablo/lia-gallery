@@ -17,7 +17,9 @@
   });
 
   function applyAdminClass(session) {
-    document.body.classList.toggle('is-admin', !!session);
+    // 익명 사용자는 admin이 아님 — 이메일 있는 사용자(liakim)만
+    const isAdmin = !!(session && session.user && !session.user.is_anonymous);
+    document.body.classList.toggle('is-admin', isAdmin);
   }
 
   window.sb.auth.getSession().then(({ data: { session } }) => applyAdminClass(session));

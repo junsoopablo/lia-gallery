@@ -309,6 +309,146 @@ body.is-admin .admin-only { display: inline-flex; }
   transform: translateY(-1px);
 }
 
+/* === Likes === */
+.card-like-pill {
+  color: var(--pink);
+  font-weight: 500;
+}
+
+.lightbox-likes {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 2px dashed var(--cream-deep);
+}
+
+.lightbox-like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--cream);
+  border: 2px solid var(--cream-deep);
+  border-radius: 999px;
+  padding: 9px 18px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.lightbox-like-btn:hover {
+  background: var(--pink-soft);
+  border-color: var(--pink-soft);
+}
+
+.lightbox-like-btn:active {
+  transform: scale(0.97);
+}
+
+.lightbox-like-btn.liked {
+  background: var(--pink-soft);
+  border-color: var(--pink);
+  color: var(--text);
+}
+
+.lightbox-like-btn .like-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.lightbox-like-btn .like-count {
+  font-weight: 700;
+}
+
+.lightbox-like-btn .like-label {
+  font-size: 0.92rem;
+  color: var(--text-soft);
+}
+
+.lightbox-likers {
+  margin-top: 10px;
+  font-size: 0.88rem;
+  color: var(--text-soft);
+  line-height: 1.55;
+  word-break: keep-all;
+}
+.lightbox-likers:empty { display: none; }
+
+/* === Name modal === */
+.name-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(74, 63, 85, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+.name-modal[hidden] { display: none; }
+
+.name-modal-content {
+  background: white;
+  border-radius: 22px;
+  padding: 26px 28px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.name-modal-content h3 {
+  font-family: 'Gaegu', cursive;
+  font-size: 1.55rem;
+  color: var(--pink);
+  margin-bottom: 8px;
+}
+
+.name-modal-content p {
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+}
+
+.name-modal-content input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--text);
+  padding: 13px 16px;
+  border: 2px solid var(--cream-deep);
+  border-radius: 12px;
+  background: var(--cream);
+  margin-bottom: 18px;
+}
+
+.name-modal-content input:focus {
+  outline: none;
+  border-color: var(--pink);
+  background: white;
+}
+
+.name-modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-soft);
+  border: 2px solid var(--cream-deep);
+}
+
+.btn-ghost:hover {
+  background: var(--cream-deep);
+  color: var(--text);
+  box-shadow: none;
+  transform: none;
+}
+
 .lightbox-close {
   position: absolute;
   top: 20px;
