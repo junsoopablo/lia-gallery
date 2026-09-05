@@ -41,6 +41,7 @@
   </header>
 
   <main>
+    <p id="galleryNotice" role="status" hidden></p>
     <div id="filterBar" class="filter-bar" role="tablist" aria-label="주제별 필터"></div>
     <section id="gallery" class="gallery" aria-label="작품 목록"></section>
 
@@ -90,7 +91,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
+  <script src="artworks.js"></script>
   <script>
+    (function (savedArtworks) {
     // === Show 편집 link only on localhost ===
     if (['localhost', '127.0.0.1'].includes(location.hostname)) {
       document.querySelectorAll('.admin-link').forEach(a => a.hidden = false);
@@ -108,8 +111,8 @@
     const filterBar = document.getElementById('filterBar');
 
     // 현재 사용자 상태 추적
-    sb.auth.getSession().then(({ data: { session } }) => { currentUser = session?.user || null; });
-    sb.auth.onAuthStateChange((_e, session) => {
+    window.sb?.auth.getSession().then(({ data: { session } }) => { currentUser = session?.user || null; }).catch(console.warn);
+    window.sb?.auth.onAuthStateChange((_e, session) => {
       currentUser = session?.user || null;
       // 라이트박스가 열려있으면 좋아요 상태 갱신
       if (lightbox.classList.contains('open') && artworks[currentIdx]) {
@@ -120,9 +123,14 @@
     // === Load artworks (with likes) ===
     async function loadArtworks() {
       gallery.innerHTML = '<div class="empty">작품 불러오는 중...</div>';
+      const notice = document.getElementById('galleryNotice');
+      notice.hidden = true;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
       const url = `${SUPABASE_URL}/rest/v1/artworks?select=*,likes(user_id,display_name)&order=sort_order.desc.nullslast,created_at.desc`;
       try {
         const res = await fetch(url, {
+          signal: controller.signal,
           headers: {
             apikey: SUPABASE_ANON_KEY,
             Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
@@ -141,7 +149,13 @@
         }));
         renderGallery();
       } catch (e) {
-        gallery.innerHTML = '<div class="empty">작품을 불러오지 못했어요: ' + e.message + '</div>';
+        console.warn('작품 서버 연결 실패, 저장된 작품을 표시합니다.', e);
+        artworks = savedArtworks.map(art => ({ ...art, id: null, likes: [], archived: true }));
+        notice.textContent = '서버에 연결되지 않아 저장된 작품을 보여드려요. 최근 작품과 좋아요는 잠시 확인할 수 없어요.';
+        notice.hidden = false;
+        renderGallery();
+      } finally {
+        clearTimeout(timeout);
       }
     }
 
@@ -267,6 +281,9 @@
 
     function updateLightboxLikes(art) {
       const btn = document.getElementById('lightboxLikeBtn');
+      btn.disabled = !!art.archived || !window.sb;
+      btn.querySelector('.like-label').textContent = art.archived ? '좋아요 잠시 쉬는 중' : '좋아요';
+      document.getElementById('lightboxDelete').disabled = !!art.archived || !window.sb;
       const icon = btn.querySelector('.like-icon');
       const countEl = btn.querySelector('.like-count');
       const likers = document.getElementById('lightboxLikers');
@@ -369,7 +386,7 @@
       e.stopPropagation();
       e.preventDefault();
       const art = artworks[currentIdx];
-      if (!art) { console.warn('no current artwork'); return; }
+      if (!art || art.archived || !window.sb) return;
       console.log('[like] click on', art.title, 'id=', art.id);
 
       const user = await ensureUser();
@@ -434,7 +451,7 @@
     document.getElementById('lightboxDelete').addEventListener('click', async (e) => {
       e.stopPropagation();
       const art = artworks[currentIdx];
-      if (!art) return;
+      if (!art || art.archived || !window.sb) return;
       const label = art.title || '이 작품';
       if (!confirm(`"${label}"을(를) 정말 삭제할까요?\n되돌릴 수 없어요.`)) return;
 
@@ -475,6 +492,7 @@
         nav(dx < 0 ? 1 : -1);
       }
     }, { passive: true });
+    })(artworks);
   </script>
 </body>
 </html>
